@@ -25,7 +25,8 @@ RUN echo 'deb http://ppa.launchpad.net/ubuntugis/ubuntugis-unstable/ubuntu bioni
 
 # clone pywps code into /code folder
 RUN apt install git -y && \
-    git clone https://github.com/SusannaGr/pywps-flask-polito.git --single-branch --branch master /code
+    git clone https://github.com/SusannaGr/pywps-flask-polito.git --single-branch --branch SusannaGr-POLITO-Renerfor
+r /code
 
 #COPY pywps_polito.py /code/wsgi/pywps.py
 # run setup.py and install gunicorn and requirements
