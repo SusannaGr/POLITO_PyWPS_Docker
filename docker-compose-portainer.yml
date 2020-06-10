@@ -1,0 +1,76 @@
+# Docker compose PRODUCTION configuration for POLITO_WPS
+#
+#
+# This configuration provides a self-contained
+# deployment including the DB and the async
+# Celery environment
+#
+# Required .env:
+# - POLITO_PYWPS_DOCKER_SHARED_VOLUME: absolute path to permanent storage
+# - POLITO_PYWPS_PUBLIC_HOSTNAME: public hostname
+#
+# See also "environment" entry for individual services below
+#
+# Author:  Walter Lorenzetti (lorenzetti@gis3w.it, Gis3W)
+# Date:    2020-03-04
+# License: GPL
+
+version: '2'
+services:
+
+  pywps:
+    image: polito/pywps:grass
+    environment:
+      # For GRASS (fixed)
+      - PYTHONPATH=/usr/lib/grass78/etc/python
+      - GISDBASE=/shared_volume/gisdbase
+      - GRASSDIR=/usr/lib/grass78
+      - GISBASE=/usr/lib/grass78
+    expose:
+      - "5000"
+    volumes:
+      - ${POLITO_PYWPS_DOCKER_INSTALLATION_DIR}/config/pywps/cfg/pywps.cfg:/etc/pywps.cfg:ro
+      - ${POLITO_PYWPS_DOCKER_INSTALLATION_DIR}/config/pywps/wsgi/pywps.wsgi:/code/wsgi/pywps.py:ro
+      - ${POLITO_PYWPS_DOCKER_INSTALLATION_DIR}/config/pywps/processes:/code/processes:ro
+      - ${POLITO_PYWPS_DOCKER_INSTALLATION_DIR}/data/grass/gisdbase:/shared_volume/gisdbase
+      - ${POLITO_PYWPS_DOCKER_SHARED_VOLUME}/logs:/code/logs
+      - ${POLITO_PYWPS_DOCKER_SHARED_VOLUME}/workdir:/shared_volume/workdir
+      - ${POLITO_PYWPS_DOCKER_SHARED_VOLUME}/inputs:/shared_volume/inputs
+      - ${POLITO_PYWPS_DOCKER_SHARED_VOLUME}/outputs:/shared_volume/outputs
+    command: >
+      bash -c "gunicorn -b 0.0.0.0:5000 --workers 5 --log-syslog  --pythonpath /code wsgi.pywps:application"
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    networks:
+      internal:
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8080:8080"
+      - "4433:4433"
+    expose:
+      - "8080"
+    volumes:
+      - ${POLITO_PYWPS_DOCKER_SHARED_VOLUME}:/shared_volume
+      - ${POLITO_PYWPS_DOCKER_SHARED_VOLUME}/var/www/.well-known:/var/www/.well-known
+      - ${POLITO_PYWPS_DOCKER_SHARED_VOLUME}/certs/letsencrypt:/etc/letsencrypt:ro
+      - ${POLITO_PYWPS_DOCKER_INSTALLATION_DIR}/config/nginx:/etc/nginx/conf.d:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    restart: always
+    networks:
+      internal:
+
+volumes:
+    shared_volume:
+
+networks:
+    internal:
