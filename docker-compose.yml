@@ -10,10 +10,6 @@
 # - POLITO_PYWPS_PUBLIC_HOSTNAME: public hostname
 #
 # See also "environment" entry for individual services below
-#
-# Author:  Walter Lorenzetti (lorenzetti@gis3w.it, Gis3W)
-# Date:    2020-03-04
-# License: GPL
 
 version: '3'
 services:
